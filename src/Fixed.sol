@@ -11,4 +11,11 @@ library Fixed {
     int256 internal constant INV_SQRT_2PI = 398942280401432677; // 1/sqrt(2*pi)
 
     error Domain();
+
+    function sqrt(uint256 x) internal pure returns (uint256 y) {
+        if (x == 0) return 0;
+        y = x;
+        uint256 z = x / 2 + 1;
+        while (z < y) { y = z; z = (x / z + z) / 2; }
+    }
 }
