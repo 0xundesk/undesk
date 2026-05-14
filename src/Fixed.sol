@@ -12,10 +12,15 @@ library Fixed {
 
     error Domain();
 
+    /// Square root of a 1e18 number, Babylonian, lifted to 1e36 first.
     function sqrt(uint256 x) internal pure returns (uint256 y) {
         if (x == 0) return 0;
-        y = x;
-        uint256 z = x / 2 + 1;
-        while (z < y) { y = z; z = (x / z + z) / 2; }
+        uint256 n = x * 1e18;
+        y = n;
+        uint256 z = n / 2 + 1;
+        while (z < y) {
+            y = z;
+            z = (n / z + z) / 2;
+        }
     }
 }
