@@ -24,14 +24,19 @@ library Fixed {
         }
     }
 
-    /// e^x, Taylor series only, no reduction yet.
+    /// e^x. Argument reduced to |r| <= ln2/2, then a Taylor series.
     function exp(int256 x) internal pure returns (int256) {
+        if (x < -42 * ONE) return 0;
+        if (x > 88 * ONE) revert Domain();
+        int256 k = (x + (x >= 0 ? LN2 / 2 : -LN2 / 2)) / LN2;
+        int256 r = x - k * LN2;
         int256 term = ONE;
         int256 sum = ONE;
-        for (uint256 i = 1; i <= 20; ++i) {
-            term = (term * x) / ONE / int256(i);
+        for (uint256 i = 1; i <= 12; ++i) {
+            term = (term * r) / ONE / int256(i);
             sum += term;
         }
-        return sum;
+        if (k >= 0) return sum << uint256(k);
+        return sum >> uint256(-k);
     }
 }
