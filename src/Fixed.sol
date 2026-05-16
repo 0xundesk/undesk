@@ -23,5 +23,15 @@ library Fixed {
             z = (n / z + z) / 2;
         }
     }
-}
 
+    /// e^x, Taylor series only, no reduction yet.
+    function exp(int256 x) internal pure returns (int256) {
+        int256 term = ONE;
+        int256 sum = ONE;
+        for (uint256 i = 1; i <= 20; ++i) {
+            term = (term * x) / ONE / int256(i);
+            sum += term;
+        }
+        return sum;
+    }
+}
