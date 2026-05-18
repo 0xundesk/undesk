@@ -24,3 +24,4 @@ contract MathTest is Test {
     }
 
 }
+
