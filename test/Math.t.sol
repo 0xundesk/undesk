@@ -16,4 +16,11 @@ contract MathTest is Test {
         near(int256(Fixed.sqrt(9e18)), 3e18, 1e6, "sqrt9");
     }
 
+    function test_Exp() public pure {
+        near(Fixed.exp(0), 1e18, 1e6, "exp0");
+        near(Fixed.exp(1e18), 2718281828459045235, 1e9, "exp1");
+        near(Fixed.exp(-1e18), 367879441171442321, 1e9, "exp-1");
+        near(Fixed.exp(5e18), 148413159102576603174, 1e12, "exp5");
+    }
+
 }
