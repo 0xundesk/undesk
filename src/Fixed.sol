@@ -40,17 +40,22 @@ library Fixed {
         return sum >> uint256(-k);
     }
 
-    /// Natural log, atanh series on (x-1)/(x+1). No 2-power reduction yet.
+    /// Natural log of a 1e18 number. x = m * 2^k with m in [1,2), then the
+    /// atanh series on m, which converges fast because z is at most 1/3.
     function ln(int256 x) internal pure returns (int256) {
         if (x <= 0) revert Domain();
-        int256 z = ((x - ONE) * ONE) / (x + ONE);
+        int256 k;
+        int256 m = x;
+        while (m >= 2 * ONE) { m >>= 1; ++k; }
+        while (m < ONE) { m <<= 1; --k; }
+        int256 z = ((m - ONE) * ONE) / (m + ONE);
         int256 z2 = (z * z) / ONE;
         int256 term = z;
         int256 sum = z;
-        for (uint256 i = 1; i <= 20; ++i) {
+        for (uint256 i = 1; i <= 12; ++i) {
             term = (term * z2) / ONE;
             sum += term / int256(2 * i + 1);
         }
-        return 2 * sum;
+        return 2 * sum + k * LN2;
     }
 }
