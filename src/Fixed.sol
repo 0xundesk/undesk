@@ -59,3 +59,4 @@ library Fixed {
         return 2 * sum + k * LN2;
     }
 }
+
