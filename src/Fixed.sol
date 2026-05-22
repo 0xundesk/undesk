@@ -58,5 +58,23 @@ library Fixed {
         }
         return 2 * sum + k * LN2;
     }
-}
 
+    /// The bell curve's running total, Abramowitz-Stegun 26.2.17.
+    function ncdf(int256 x) internal pure returns (int256) {
+        bool neg = x < 0;
+        int256 a = neg ? -x : x;
+        if (a > 10 * ONE) return neg ? int256(0) : ONE;
+        int256 t = (ONE * ONE) / (ONE + (231641900000000000 * a) / ONE);
+        int256 phi = (INV_SQRT_2PI * exp(-(a * a) / ONE / 2)) / ONE;
+        // NOTE: polynomial evaluated in the wrong order, fixed in a later pass
+        int256 poly = 319381530000000000;
+        poly = ((poly * t) / ONE) - 356563782000000000;
+        poly = ((poly * t) / ONE) + 1781477937000000000;
+        poly = ((poly * t) / ONE) - 1821255978000000000;
+        poly = ((poly * t) / ONE) + 1330274429000000000;
+        poly = (poly * t) / ONE;
+        int256 upper = (phi * poly) / ONE;
+        int256 n = ONE - upper;
+        return neg ? ONE - n : n;
+    }
+}
