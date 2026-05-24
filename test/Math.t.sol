@@ -30,5 +30,13 @@ contract MathTest is Test {
         near(Fixed.exp(5e18), 148413159102576603174, 1e12, "exp5");
     }
 
-}
+    function test_Ncdf() public pure {
+        near(Fixed.ncdf(0), 5e17, 1e11, "N(0)=0.5");
+        near(Fixed.ncdf(1e18), 841344746068543000, 1e11, "N(1)");
+        near(Fixed.ncdf(-1e18), 158655253931457000, 1e11, "N(-1)");
+        near(Fixed.ncdf(1960000000000000000), 975002104851779000, 1e11, "N(1.96)=0.975");
+        near(Fixed.ncdf(-1960000000000000000), 24997895148220000, 1e11, "N(-1.96)");
+        near(Fixed.ncdf(3e18), 998650101968369000, 1e11, "N(3)");
+    }
 
+}
