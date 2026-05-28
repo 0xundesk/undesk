@@ -46,8 +46,14 @@ library Fixed {
         if (x <= 0) revert Domain();
         int256 k;
         int256 m = x;
-        while (m >= 2 * ONE) { m >>= 1; ++k; }
-        while (m < ONE) { m <<= 1; --k; }
+        while (m >= 2 * ONE) {
+            m >>= 1;
+            ++k;
+        }
+        while (m < ONE) {
+            m <<= 1;
+            --k;
+        }
         int256 z = ((m - ONE) * ONE) / (m + ONE);
         int256 z2 = (z * z) / ONE;
         int256 term = z;
@@ -81,8 +87,3 @@ library Fixed {
         return neg ? ONE - n : n;
     }
 }
-
-
-
-
-
