@@ -17,7 +17,11 @@ library BS {
         int256 lnSK = Fixed.ln((spot * ONE) / strike);
         d1 = ((lnSK + (((vol * vol) / ONE) * tYears) / ONE / 2) * ONE) / vSqrtT;
         d2 = d1 - vSqrtT;
+    
+    function putPrice(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
+        return callPrice(spot, strike, vol, tYears) - spot + strike; // parity, rate zero
     }
+}
 
     function callPrice(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
         if (tYears <= 0) return spot > strike ? spot - strike : int256(0);
