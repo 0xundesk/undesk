@@ -18,5 +18,10 @@ library BS {
         d1 = ((lnSK + (((vol * vol) / ONE) * tYears) / ONE / 2) * ONE) / vSqrtT;
         d2 = d1 - vSqrtT;
     }
-}
 
+    function callPrice(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
+        if (tYears <= 0) return spot > strike ? spot - strike : int256(0);
+        (int256 d1, int256 d2) = ds(spot, strike, vol, tYears);
+        return (spot * Fixed.ncdf(d1)) / ONE - (strike * Fixed.ncdf(d2)) / ONE;
+    }
+}
