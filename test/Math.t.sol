@@ -3,6 +3,7 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {Fixed} from "../src/Fixed.sol";
+import {BS} from "../src/BS.sol";
 
 contract MathTest is Test {
     function near(int256 got, int256 want, int256 tol, string memory what) internal pure {
