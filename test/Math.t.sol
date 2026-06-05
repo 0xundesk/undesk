@@ -40,6 +40,9 @@ contract MathTest is Test {
         near(Fixed.ncdf(3e18), 998650101968369000, 1e11, "N(3)");
     }
 
+    function test_PutCallParity() public pure {
+        int256 c = BS.callPrice(110e18, 100e18, 0.3e18, 5e17);
+        int256 p = BS.putPrice(110e18, 100e18, 0.3e18, 5e17);
+        near(c - p, 10e18, 1e12, "C - P must equal S - K");
+    }
 }
-
-
