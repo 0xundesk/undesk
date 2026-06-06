@@ -45,4 +45,10 @@ contract MathTest is Test {
         int256 p = BS.putPrice(110e18, 100e18, 0.3e18, 5e17);
         near(c - p, 10e18, 1e12, "C - P must equal S - K");
     }
+
+    /// The one number this whole machine is judged against.
+    function test_BlackScholesTextbookCall() public pure {
+        int256 c = BS.callPrice(100e18, 100e18, 0.2e18, 1e18);
+        near(c, 7965567455405804000, 1e13, "ATM call must be 7.9656");
+    }
 }
