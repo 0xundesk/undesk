@@ -20,7 +20,13 @@ library BS {
     
     function putPrice(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
         return callPrice(spot, strike, vol, tYears) - spot + strike; // parity, rate zero
+    
+    function callDelta(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
+        if (tYears <= 0) return spot > strike ? ONE : int256(0);
+        (int256 d1,) = ds(spot, strike, vol, tYears);
+        return Fixed.ncdf(d1);
     }
+}
 }
 
     function callPrice(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
