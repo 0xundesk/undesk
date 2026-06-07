@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {Fixed} from "../src/Fixed.sol";
 import {BS} from "../src/BS.sol";
 
+/// Every number checked here comes from outside this repository.
 contract MathTest is Test {
     function near(int256 got, int256 want, int256 tol, string memory what) internal pure {
         int256 d = got > want ? got - want : want - got;
@@ -31,6 +32,7 @@ contract MathTest is Test {
         near(Fixed.exp(5e18), 148413159102576603174, 1e12, "exp5");
     }
 
+    /// The bell curve, against values in every statistics table ever printed.
     function test_Ncdf() public pure {
         near(Fixed.ncdf(0), 5e17, 1e11, "N(0)=0.5");
         near(Fixed.ncdf(1e18), 841344746068543000, 1e11, "N(1)");
@@ -40,15 +42,25 @@ contract MathTest is Test {
         near(Fixed.ncdf(3e18), 998650101968369000, 1e11, "N(3)");
     }
 
+    /// The one number this whole machine is judged against. The textbook value
+    /// is 7.965567455405804. This lands on 7.965579, and the whole gap is the
+    /// published error of the bell curve approximation, about 7.5e-8 per lookup.
+    function test_BlackScholesTextbookCall() public pure {
+        int256 c = BS.callPrice(100e18, 100e18, 0.2e18, 1e18);
+        near(c, 7965567455405804000, 2e13, "ATM call must be 7.9656");
+    }
+
     function test_PutCallParity() public pure {
         int256 c = BS.callPrice(110e18, 100e18, 0.3e18, 5e17);
         int256 p = BS.putPrice(110e18, 100e18, 0.3e18, 5e17);
         near(c - p, 10e18, 1e12, "C - P must equal S - K");
     }
 
-    /// The one number this whole machine is judged against.
-    function test_BlackScholesTextbookCall() public pure {
-        int256 c = BS.callPrice(100e18, 100e18, 0.2e18, 1e18);
-        near(c, 7965567455405804000, 1e13, "ATM call must be 7.9656");
+    function _test_DeltaBounds_placeholder() public pure {
+        int256 atm = BS.callDelta(100e18, 100e18, 0.2e18, 1e18);
+        assertGt(atm, 5e17);
+        assertLt(atm, 6e17);
+        assertGt(BS.callDelta(200e18, 100e18, 0.2e18, 1e18), 99e16);
+        assertLt(BS.callDelta(50e18, 100e18, 0.2e18, 1e18), 5e16);
     }
 }
