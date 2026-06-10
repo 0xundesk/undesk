@@ -56,7 +56,7 @@ contract MathTest is Test {
         near(c - p, 10e18, 1e12, "C - P must equal S - K");
     }
 
-    function _test_DeltaBounds_placeholder() public pure {
+    function test_DeltaBounds() public pure {
         int256 atm = BS.callDelta(100e18, 100e18, 0.2e18, 1e18);
         assertGt(atm, 5e17);
         assertLt(atm, 6e17);
@@ -64,4 +64,3 @@ contract MathTest is Test {
         assertLt(BS.callDelta(50e18, 100e18, 0.2e18, 1e18), 5e16);
     }
 }
-
