@@ -62,4 +62,8 @@ contract Undesk {
 
     Vault[] public vaults;
 
+    event Opened(uint256 indexed id, address indexed owner, uint256 shares, uint96 floor, uint40 expiry);
+    event Rebalanced(uint256 indexed id, int256 price, int256 target, uint256 shares, uint256 cash, address by);
+    event Closed(uint256 indexed id, uint256 shares, uint256 cash, int256 price);
+
     }
