@@ -66,4 +66,51 @@ contract Undesk {
     event Rebalanced(uint256 indexed id, int256 price, int256 target, uint256 shares, uint256 cash, address by);
     event Closed(uint256 indexed id, uint256 shares, uint256 cash, int256 price);
 
+    error Bad();
+    error NotOwner();
+    error Live();
+    error Done();
+    error NoDrift();
+
+    constructor(IERC20 stock_, IERC20 cash_, IFeed feed_, ISwap venue_, uint256 bounty_) {
+        bounty = bounty_;
+        stock = stock_;
+        cashToken = cash_;
+        feed = feed_;
+        venue = venue_;
     }
+
+    function count() external view returns (uint256) {
+        return vaults.length;
+    }
+
+    /// What the floor costs, in cash units, for this many shares. This is the
+    /// textbook put price and nobody receives it: it is the raw material the
+    /// vault spends manufacturing the payoff.
+    function quote(uint256 shares_, uint96 floor_, uint40 expiry_, uint64 vol_) public view returns (uint256) {
+        (, int256 p,,,) = feed.latestRoundData();
+        int256 t = int256((uint256(expiry_) - block.timestamp) * 1e18 / YEAR);
+        int256 prem =
+            BS.putPrice(int256(uint256(p)) * 1e10, int256(uint256(floor_)) * 1e10, int256(uint256(vol_)), t);
+        if (prem < 0) prem = 0;
+        return (uint256(prem) * shares_) / SHARE / 1e12;
+    }
+
+    /// Put in stock and the cash the floor costs. From here the vault holds
+    /// "the stock, but never below the floor", and no one wrote it.
+    function open(uint256 shares_, uint256 cash_, uint96 floor_, uint40 expiry_, uint64 vol_, uint64 band_)
+        external
+        returns (uint256 id)
+    {
+        if (shares_ == 0 || floor_ == 0 || expiry_ <= block.timestamp || vol_ == 0) revert Bad();
+        stock.transferFrom(msg.sender, address(this), shares_);
+        if (cash_ > 0) cashToken.transferFrom(msg.sender, address(this), cash_);
+        id = vaults.length;
+        vaults.push(
+            Vault(msg.sender, floor_, expiry_, vol_, band_ == 0 ? uint64(0.02e18) : band_, shares_, cash_, 0, false)
+        );
+        emit Opened(id, msg.sender, shares_, floor_, expiry_);
+        _move(id);
+    }
+
+}
