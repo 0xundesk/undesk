@@ -113,4 +113,28 @@ contract Undesk {
         _move(id);
     }
 
+    /// The share of the vault that belongs in stock right now.
+    function target(uint256 id) public view returns (int256) {
+        Vault storage v = vaults[id];
+        (, int256 p,,,) = feed.latestRoundData();
+        int256 t = v.expiry <= block.timestamp ? int256(0) : int256((uint256(v.expiry) - block.timestamp) * 1e18 / YEAR);
+        return BS.insuredWeight(int256(uint256(p)) * 1e10, int256(uint256(v.floor)) * 1e10, int256(uint256(v.vol)), t);
+    }
+
+    /// The share of the vault that is in stock right now.
+    function weight(uint256 id) public view returns (int256) {
+        Vault storage v = vaults[id];
+        (, int256 p,,,) = feed.latestRoundData();
+        uint256 inStock = (v.shares * uint256(p)) / PX; // 1e18 of value
+        uint256 total = inStock + v.cash * 1e12;
+        if (total == 0) return 0;
+        return int256((inStock * uint256(ONE)) / total);
+    }
+
+    function value(uint256 id) public view returns (uint256) {
+        Vault storage v = vaults[id];
+        (, int256 p,,,) = feed.latestRoundData();
+        return (v.shares * uint256(p)) / PX + v.cash * 1e12;
+    }
+
 }
