@@ -176,4 +176,39 @@ contract Undesk {
         emit Closed(id, s, c, p);
     }
 
+    /// Slide to the target weight at the feed's price, refusing any venue that
+    /// is more than MAX_SLIP_BPS away from it.
+    function _move(uint256 id) internal {
+        Vault storage v = vaults[id];
+        (, int256 p,,,) = feed.latestRoundData();
+        uint256 px = uint256(p);
+
+        uint256 inStock = (v.shares * px) / PX;
+        uint256 total = inStock + v.cash * 1e12;
+        if (total == 0) return;
+
+        uint256 want = (total * uint256(target(id))) / uint256(ONE);
+
+        if (want > inStock) {
+            uint256 buy = want - inStock; // value of stock to buy, 1e18
+            uint256 spend = buy / 1e12; // cash units
+            if (spend > v.cash) spend = v.cash;
+            if (spend == 0) return;
+            uint256 minOut = ((spend * 1e12 * PX) / px) * (10_000 - MAX_SLIP_BPS) / 10_000;
+            cashToken.approve(address(venue), spend);
+            uint256 got = venue.swap(address(cashToken), address(stock), spend, minOut);
+            v.cash -= spend;
+            v.shares += got;
+        } else {
+            uint256 sell = inStock - want; // value of stock to sell, 1e18
+            uint256 qty = (sell * PX) / px; // stock units
+            if (qty > v.shares) qty = v.shares;
+            if (qty == 0) return;
+            uint256 minOut = ((qty * px) / PX / 1e12) * (10_000 - MAX_SLIP_BPS) / 10_000;
+            stock.approve(address(venue), qty);
+            uint256 got = venue.swap(address(stock), address(cashToken), qty, minOut);
+            v.shares -= qty;
+            v.cash += got;
+        }
+    }
 }
