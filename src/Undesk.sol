@@ -137,4 +137,43 @@ contract Undesk {
         return (v.shares * uint256(p)) / PX + v.cash * 1e12;
     }
 
+    /// Anyone may push the button once the weight has drifted past the band.
+    /// The caller is paid for the gas out of the vault's cash.
+    function rebalance(uint256 id) external {
+        Vault storage v = vaults[id];
+        if (v.closed) revert Done();
+        int256 want = target(id);
+        int256 have = weight(id);
+        int256 gap = want > have ? want - have : have - want;
+        if (gap < int256(uint256(v.band))) revert NoDrift();
+        _move(id);
+        unchecked {
+            ++v.rebalances;
+        }
+        uint256 fee = bounty > v.cash ? v.cash : bounty;
+        if (fee > 0) {
+            v.cash -= fee;
+            cashToken.transfer(msg.sender, fee);
+        }
+        (, int256 p,,,) = feed.latestRoundData();
+        emit Rebalanced(id, p, want, v.shares, v.cash, msg.sender);
+    }
+
+    /// After the day named, everything goes back to the owner. What comes back
+    /// is the manufactured payoff, not a promise anyone made.
+    function close(uint256 id) external {
+        Vault storage v = vaults[id];
+        if (v.closed) revert Done();
+        if (block.timestamp < v.expiry) revert Live();
+        v.closed = true;
+        uint256 s = v.shares;
+        uint256 c = v.cash;
+        v.shares = 0;
+        v.cash = 0;
+        if (s > 0) stock.transfer(v.owner, s);
+        if (c > 0) cashToken.transfer(v.owner, c);
+        (, int256 p,,,) = feed.latestRoundData();
+        emit Closed(id, s, c, p);
+    }
+
 }
