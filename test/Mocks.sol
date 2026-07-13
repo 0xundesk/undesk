@@ -35,4 +35,19 @@ contract Token is IERC20 {
     }
 }
 
+contract StepFeed is IFeed {
+    int256 public px;
+    uint80 public round;
+
+    function set(int256 p) external {
+        px = p;
+        ++round;
+    }
+
+    function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80) {
+        return (round, px, block.timestamp, block.timestamp, round);
+    }
+}
+
+/// Trades exactly at the feed, so a replay measures the machine and nothing else.
 
