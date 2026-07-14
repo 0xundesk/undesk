@@ -50,4 +50,30 @@ contract StepFeed is IFeed {
 }
 
 /// Trades exactly at the feed, so a replay measures the machine and nothing else.
+contract MirrorVenue is ISwap {
+    IFeed public immutable feed;
+    Token public immutable stock;
+    Token public immutable cash;
 
+    constructor(IFeed f, Token s, Token c) {
+        feed = f;
+        stock = s;
+        cash = c;
+    }
+
+    function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 minOut) external returns (uint256 out) {
+        (, int256 p,,,) = feed.latestRoundData();
+        uint256 px = uint256(p);
+        if (tokenIn == address(cash)) {
+            out = (amountIn * 1e12 * 1e8) / px;
+            cash.transferFrom(msg.sender, address(this), amountIn);
+            stock.mint(msg.sender, out);
+        } else {
+            out = (amountIn * px) / 1e8 / 1e12;
+            stock.transferFrom(msg.sender, address(this), amountIn);
+            cash.mint(msg.sender, out);
+        }
+        require(out >= minOut, "slip");
+        require(tokenOut != address(0));
+    }
+}
