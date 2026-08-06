@@ -130,4 +130,64 @@ contract ReplayTest is Test {
         return a[a.length / 2];
     }
 
+    /// The number this project lives or dies by: how close the manufactured
+    /// payoff lands to what the option actually owed, using nothing but the
+    /// prices this chain published.
+    function test_ReplicationErrorOnRealHistory() public {
+        uint256 n = TS.length;
+        uint256[] memory errs = new uint256[](12);
+        uint256[] memory rebs = new uint256[](12);
+        uint256 k;
+        for (uint256 i = 0; i < 12; ++i) {
+            uint256 i0 = (i * (n - 260)) / 12;
+            Run memory r = replay(i0, 0.02e18, 0);
+            if (r.premium == 0) continue;
+            errs[k] = r.errBps;
+            rebs[k] = r.rebalances;
+            ++k;
+        }
+        assembly {
+            mstore(errs, k)
+            mstore(rebs, k)
+        }
+        uint256 med = _median(errs);
+        emit log_named_uint("windows replayed", k);
+        emit log_named_uint("median rebalances per 30 days", _median(rebs));
+        emit log_named_decimal_uint("MEDIAN REPLICATION ERROR, % of premium", med, 2);
+        assertLt(med, 1000, "must land inside 10% of the premium");
+    }
+
+    /// What the floor really costs on this chain: fewer rebalances mean less
+    /// gas and more error. The bounty is what the button pusher is paid, and
+    /// 1 dollar is roughly the measured fee of a transaction here.
+    function test_CostCurve() public {
+        uint256 n = TS.length;
+        uint64[4] memory bands = [uint64(0), 0.02e18, 0.05e18, 0.10e18];
+        emit log_string("band | rebalances | error without the bounty | error paying 1 dollar a push");
+        for (uint256 b = 0; b < bands.length; ++b) {
+            uint256[] memory free_ = new uint256[](8);
+            uint256[] memory paid = new uint256[](8);
+            uint256[] memory rebs = new uint256[](8);
+            uint256 k;
+            for (uint256 i = 0; i < 8; ++i) {
+                uint256 i0 = (i * (n - 260)) / 8;
+                Run memory a = replay(i0, bands[b], 0);
+                Run memory c = replay(i0, bands[b], 1e6);
+                if (a.premium == 0) continue;
+                free_[k] = a.errBps;
+                paid[k] = c.errBps;
+                rebs[k] = a.rebalances;
+                ++k;
+            }
+            assembly {
+                mstore(free_, k)
+                mstore(paid, k)
+                mstore(rebs, k)
+            }
+            emit log_named_uint("band (1e18)", bands[b]);
+            emit log_named_uint("  rebalances", _median(rebs));
+            emit log_named_decimal_uint("  error %", _median(free_), 2);
+            emit log_named_decimal_uint("  error % paying the pusher", _median(paid), 2);
+        }
+    }
 }
