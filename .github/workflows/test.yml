@@ -1,5 +1,8 @@
 name: test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 jobs:
   forge:
     runs-on: ubuntu-latest
@@ -8,4 +11,5 @@ jobs:
         with: { submodules: recursive }
       - uses: foundry-rs/foundry-toolchain@v1
         with: { version: nightly }
-      - run: forge test
+      - run: forge build --sizes
+      - run: forge test -vv
