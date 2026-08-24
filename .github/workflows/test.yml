@@ -13,3 +13,4 @@ jobs:
         with: { version: nightly }
       - run: forge build --sizes
       - run: forge test -vv
+
