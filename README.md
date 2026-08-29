@@ -16,3 +16,10 @@ alone. The formula is the consequence, not the discovery. This is the building.
 
     textbook value of the standard call      7.965567455405804
     this engine, in integers only            7.965579
+
+## What it costs to run
+
+    band    pushes per 30 days    error       error with the pusher paid
+    2%             213            4.67%              26.70%
+    5%              46            6.32%              11.67%
+    10%             12           13.16%              14.24%
