@@ -26,7 +26,7 @@ Two numbers say whether it works, and both come from outside this repository.
     this engine, in integers only            7.965579
 
     replayed on 992 real prints from Hood Chain, 12 windows of 30 days
-    the manufactured payoff lands within     4.08% of what the option owed
+    the manufactured payoff lands within     2.52% of what the option owed
 
 The prints are the ones Hood Chain published for NVIDIA, read off the feed at
 `0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15` and packed into `test/History.sol`.
@@ -39,9 +39,9 @@ The vault moves when the weight has drifted past a band, and whoever pushes the
 button is paid out of the vault. Wider bands mean fewer pushes.
 
     band    pushes per 30 days    error       error with the pusher paid
-    2%             213            4.67%              26.70%
-    5%              46            6.32%              11.67%
-    10%             12           13.16%              14.24%
+    2%             218            2.52%              26.51%
+    5%              46            3.59%              11.37%
+    10%             14           11.58%              10.04%
 
 Measured on a hundred shares, paying one dollar a push, which is what a
 transaction costs on this chain. The push is a flat fee, so the larger the
@@ -56,8 +56,8 @@ decimal point.
   exponential by argument reduction and a Taylor series, the square root by
   Babylonian iteration, and the bell curve by the Abramowitz and Stegun
   rational approximation, all in 1e18 fixed point
-- `BS.sol` - what an option is worth, and the fraction of a share you must
-  hold to track it
+- `BS.sol` - what an option is worth, and the share of the vault that must
+  sit in stock to track it
 - `Undesk.sol` - the vault: put stock in, name the floor and the day, and
   anyone may push the button when the weight has drifted
 
