@@ -87,7 +87,3 @@ library Fixed {
         return neg ? ONE - n : n;
     }
 }
-
-
-
-
