@@ -6,7 +6,7 @@
 
 Hold on, down impossible.
 
-[x.com/0xundesk](https://x.com/0xundesk)
+[x.com/HODI_rh](https://x.com/HODI_rh)
 
 ## Live on Hood Chain
 
