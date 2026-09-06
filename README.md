@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="UNDESK" width="100%">
+</p>
+
 # UNDESK
 
 An option nobody wrote.
