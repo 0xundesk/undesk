@@ -21,16 +21,16 @@ interface ISwap {
     function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 minOut) external returns (uint256);
 }
 
-/// @title Ratchet
+/// @title Hodi
 /// @notice Your high becomes your floor. You put in stock. The vault slides
 ///         between stock and cash at every price the chain publishes, holding
 ///         a floor under the position, and when the price climbs it drags the
-///         floor up behind it. A ratchet turns one way: the floor rises, locks,
+///         floor up behind it. A hodi turns one way: the floor rises, locks,
 ///         and never comes back down. There is no writer, no counterparty and
 ///         no promise to trust: the payoff is manufactured out of your own two
-///         assets, and every click of the ratchet is a public transaction.
-contract Ratchet {
-    string public constant name = "Ratchet";
+///         assets, and every click of the hodi is a public transaction.
+contract Hodi {
+    string public constant name = "Hodi";
 
     IERC20 public immutable stock;
     IERC20 public immutable cashToken;
@@ -155,7 +155,7 @@ contract Ratchet {
 
     /// Where the floor could move today. If re-striking at the current price
     /// would guarantee more cash value than the vault already has locked, by
-    /// at least the vault's lift, the ratchet has a click waiting. Returns the
+    /// at least the vault's lift, the hodi has a click waiting. Returns the
     /// candidate floor and its guaranteed value, or two zeros.
     function click(uint256 id) public view returns (uint96 newFloor, uint256 newLocked) {
         Vault storage v = vaults[id];
@@ -196,7 +196,7 @@ contract Ratchet {
         return (v.shares * uint256(p)) / PX + v.cash * 1e12;
     }
 
-    /// Anyone may push the button once the ratchet has a click waiting or the
+    /// Anyone may push the button once the hodi has a click waiting or the
     /// weight has drifted past the band. The caller is paid out of the vault.
     function rebalance(uint256 id) external {
         Vault storage v = vaults[id];

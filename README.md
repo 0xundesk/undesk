@@ -1,8 +1,13 @@
-# RATCHET
+# HODI
 
-Your high becomes your floor.
+Hold on, down impossible.
 
 [x.com/0xundesk](https://x.com/0xundesk)
+
+Crypto's oldest word is HODL, and behind the meme is real advice: what you
+should do with something that goes up is nothing. HODI is that word turned
+into a machine. Your high becomes your floor, and once it is your floor, it
+stays.
 
 A bank sells this as a lookback put with a rolling strike, on a desk full of
 people. This is that desk with nobody at it.
@@ -13,19 +18,13 @@ stock and cash so that it holds what "the stock, but never below the floor"
 pays, and when the stock climbs, drag the floor up behind it and lock it. A
 ratchet turns one way. The floor only ever rises.
 
-## Live on Hood Chain
-
-    Ratchet  0xDC3d4f67F9AD517336f2db084dc05f30d2b63112
-    Venue    0x5378Fa5716dd2150011928D4224311417673fDAb
-    Chain    Hood Chain (id 4663)
-
 ## The proof
 
 Black and Scholes showed that an option can be built out of stock and cash
-alone. The formula is the consequence. This machine builds the option, and
-the ratchet adds one line: whenever the price has climbed enough that a fresh
-at-the-money put fits inside the vault with room, the floor is re-struck at
-the new price and the guarantee is locked to the new number.
+alone. The formula is the consequence. HODI builds the option, and adds one
+line: whenever the price has climbed enough that a fresh at-the-money put
+fits inside the vault with room, the floor is re-struck at the new price and
+the guarantee is locked to the new number.
 
 Two numbers say whether the underlying replication works, both from outside
 this repository. The textbook value of a standard call is 7.965567455405804.
@@ -35,12 +34,12 @@ Twelve month-long windows replay from the tape with a fixed floor. The
 manufactured payoff lands within 2.52 percent of what the option owed, the
 median across every window, at the thirteen chances a day this chain gives.
 
-## The ratchet on the same tape
+## The click on the same tape
 
 Twelve month-long windows again, with clicks turned on and a two percent
 minimum bump per click. Each window's floor starts at spot, and every click
-demands that a fresh at-the-money put fits inside the vault with headroom
-before it fires. The measured result:
+demands that a fresh at-the-money put fits inside the vault with a safety
+buffer before it fires. The measured result:
 
     median clicks per 30 days                  1
     median floor rise over the month           7.6%
@@ -56,19 +55,19 @@ floor carries too, plus a tail.
 ## The desk staffs itself
 
 Every move is a transaction. Anyone may push the button once the position
-has drifted past its band, or once the ratchet has a click waiting. The
-vault pays the pusher out of its own cash. The machine hires its own staff,
-one transaction at a time.
+has drifted past its band, or once a click is waiting. The vault pays the
+pusher out of its own cash. The machine hires its own staff, one transaction
+at a time.
 
 ## What is inside
 
 The EVM has no decimal point, so it has no logarithm, no exponential, no
-square root, no bell curve. RATCHET carries its own, in 1e18 fixed point:
+square root, no bell curve. HODI carries its own, in 1e18 fixed point:
 the log by an atanh series, e^x by argument reduction and a Taylor series,
 the normal curve by Abramowitz and Stegun, good to seven decimal places.
 
 - `Fixed.sol` and `BS.sol` - the arithmetic and the Black-Scholes core
-- `Ratchet.sol` - the vault: stock in, floor named, clicks and drifts
+- `Hodi.sol` - the vault: stock in, floor named, clicks and drifts
   handled by anyone, closed after expiry
 - `Venue.sol` - the bridge to the Uniswap V3 style pool where the two legs
   actually trade, with a callback that only pays out while the vault's own
@@ -88,8 +87,7 @@ borrows and never shorts.
     rebalance(id)                                            -> anyone, once click or drift has room
     close(id)                                                -> after expiry, everything to the owner
 
-Setting `lift` to the maximum keeps the floor fixed. That is the plain
-UNDESK behaviour: same code, no ratchet.
+Setting `lift` to the maximum keeps the floor fixed.
 
 ## Build and test
 

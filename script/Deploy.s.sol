@@ -3,7 +3,7 @@ pragma solidity 0.8.26;
 
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
-import {Ratchet, IERC20, IFeed, ISwap} from "../src/Ratchet.sol";
+import {Hodi, IERC20, IFeed, ISwap} from "../src/Hodi.sol";
 import {Venue, IV3Pool} from "../src/Venue.sol";
 
 /// Hood Chain mainnet, the NVDA desk.
@@ -19,9 +19,9 @@ contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
         Venue venue = new Venue(IV3Pool(POOL));
-        Ratchet ratchet = new Ratchet(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), BOUNTY);
+        Hodi hodi = new Hodi(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), BOUNTY);
         vm.stopBroadcast();
         console2.log("venue ", address(venue));
-        console2.log("ratchet", address(ratchet));
+        console2.log("hodi", address(hodi));
     }
 }

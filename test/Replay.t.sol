@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {Ratchet, IERC20, IFeed, ISwap} from "../src/Ratchet.sol";
+import {Hodi, IERC20, IFeed, ISwap} from "../src/Hodi.sol";
 import {Fixed} from "../src/Fixed.sol";
 import {History} from "./History.sol";
 import {Token, StepFeed, MirrorVenue} from "./Mocks.sol";
@@ -62,7 +62,7 @@ contract ReplayTest is Test {
         uint256 premium;
     }
 
-    Ratchet lastU;
+    Hodi lastU;
     uint256 lastId;
 
     struct Ctx {
@@ -72,7 +72,7 @@ contract ReplayTest is Test {
         uint64 vol;
         uint256 prem;
         uint256 id;
-        Ratchet u;
+        Hodi u;
     }
 
     function replay(uint256 i0, uint64 band, uint256 bounty) internal returns (Run memory r) {
@@ -90,7 +90,7 @@ contract ReplayTest is Test {
         c.vol = volOf(i0, c.iEnd);
         if (c.vol == 0) return r;
 
-        c.u = new Ratchet(
+        c.u = new Hodi(
             IERC20(address(stock)), IERC20(address(cash)), IFeed(address(feed)), ISwap(address(venue)), bounty
         );
 
@@ -202,7 +202,7 @@ contract ReplayTest is Test {
 
     /// The twist, on the market that actually happened: the floor follows the
     /// price up and never comes back down. Measured over the real prints.
-    function test_TheRatchetOnRealHistory() public {
+    function test_TheHodiOnRealHistory() public {
         uint256 n = TS.length;
         int256[] memory head = new int256[](12);
         uint256[] memory clicks = new uint256[](12);

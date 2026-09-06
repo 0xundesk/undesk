@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {IERC20, ISwap} from "./Ratchet.sol";
+import {IERC20, ISwap} from "./Hodi.sol";
 
 interface IV3Pool {
     function swap(address recipient, bool zeroForOne, int256 amountSpecified, uint160 sqrtPriceLimitX96, bytes calldata data)

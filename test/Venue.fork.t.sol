@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {Ratchet, IERC20, IFeed, ISwap} from "../src/Ratchet.sol";
+import {Hodi, IERC20, IFeed, ISwap} from "../src/Hodi.sol";
 import {Venue, IV3Pool} from "../src/Venue.sol";
 
 /// The venue and the vault against the real pool, the real tokens and the
@@ -78,7 +78,7 @@ contract VenueForkTest is Test {
     /// position on real NVDA, watch it take its opening hedge on the real
     /// pool, then close after expiry and get both legs back.
     function test_VaultOnTheRealPool() public {
-        Ratchet u = new Ratchet(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), 1e6);
+        Hodi u = new Hodi(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), 1e6);
 
         uint96 floor = uint96(feedPx());
         uint40 expiry = uint40(block.timestamp + 30 days);
