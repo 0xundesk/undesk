@@ -8,6 +8,16 @@ Hold on, down impossible.
 
 [x.com/0xundesk](https://x.com/0xundesk)
 
+## Live on Hood Chain
+
+    Hodi     0x7539AB9742b853F17cCCF03d4F36f6bb0009e857
+    Venue    0x0af2A62deD3634c2AB7A80FeB2b90E31937985d0
+    Chain    Hood Chain (id 4663)
+
+First live quote minutes after deploy: ten NVDA shares, floor at spot, thirty
+days out, 42 percent vol: 110.53 USDG. That number came out of the chain,
+not off a screen.
+
 Crypto's oldest word is HODL, and behind the meme is real advice: what you
 should do with something that goes up is nothing. HODI is that word turned
 into a machine. Your high becomes your floor, and once it is your floor, it
