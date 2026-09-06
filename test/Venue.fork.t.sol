@@ -19,6 +19,8 @@ contract VenueForkTest is Test {
     address user = address(0xA11CE);
 
     function setUp() public {
+        // this suite only means something on the real chain
+        vm.skip(block.chainid != 4663);
         venue = new Venue(IV3Pool(POOL));
         // stock from the biggest holder on the chain, cash via storage deal
         vm.prank(NVDA_WHALE);
