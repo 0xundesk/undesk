@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/banner.png" alt="RATCHET" width="100%">
-</p>
-
 # RATCHET
 
 Your high becomes your floor.
