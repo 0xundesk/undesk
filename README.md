@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.png" alt="HODI" width="100%">
+</p>
+
 # HODI
 
 Hold on, down impossible.
