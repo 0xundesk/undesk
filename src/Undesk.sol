@@ -42,6 +42,7 @@ contract Undesk {
     uint256 internal constant YEAR = 365 days;
 
     uint256 public constant MAX_SLIP_BPS = 100; // 1% away from the feed, or revert
+    uint256 public constant MAX_AGE = 5 days; // a feed that has stopped printing prices nothing
 
     /// Paid to whoever pushes the button, in cash units. It has to beat the gas
     /// of this chain, about 0.60 dollars, or nobody pushes it. It comes out of
@@ -71,6 +72,8 @@ contract Undesk {
     error Live();
     error Done();
     error NoDrift();
+    error Stale();
+    error Fail();
 
     constructor(IERC20 stock_, IERC20 cash_, IFeed feed_, ISwap venue_, uint256 bounty_) {
         bounty = bounty_;
@@ -84,14 +87,30 @@ contract Undesk {
         return vaults.length;
     }
 
+    /// The feed's price, refused when it is nonsense or has stopped printing.
+    /// Everything that decides or prices a trade reads through here; close()
+    /// does not, so a dead feed can never hold the assets hostage.
+    function _fresh() internal view returns (uint256) {
+        (, int256 p,, uint256 at,) = feed.latestRoundData();
+        if (p <= 0 || block.timestamp > at + MAX_AGE) revert Stale();
+        return uint256(p);
+    }
+
+    function _take(IERC20 t, uint256 v) internal {
+        if (!t.transferFrom(msg.sender, address(this), v)) revert Fail();
+    }
+
+    function _pay(IERC20 t, address to, uint256 v) internal {
+        if (!t.transfer(to, v)) revert Fail();
+    }
+
     /// What the floor costs, in cash units, for this many shares. This is the
     /// textbook put price and nobody receives it: it is the raw material the
     /// vault spends manufacturing the payoff.
     function quote(uint256 shares_, uint96 floor_, uint40 expiry_, uint64 vol_) public view returns (uint256) {
-        (, int256 p,,,) = feed.latestRoundData();
+        int256 p = int256(_fresh());
         int256 t = int256((uint256(expiry_) - block.timestamp) * 1e18 / YEAR);
-        int256 prem =
-            BS.putPrice(int256(uint256(p)) * 1e10, int256(uint256(floor_)) * 1e10, int256(uint256(vol_)), t);
+        int256 prem = BS.putPrice(p * 1e10, int256(uint256(floor_)) * 1e10, int256(uint256(vol_)), t);
         if (prem < 0) prem = 0;
         return (uint256(prem) * shares_) / SHARE / 1e12;
     }
@@ -103,8 +122,8 @@ contract Undesk {
         returns (uint256 id)
     {
         if (shares_ == 0 || floor_ == 0 || expiry_ <= block.timestamp || vol_ == 0) revert Bad();
-        stock.transferFrom(msg.sender, address(this), shares_);
-        if (cash_ > 0) cashToken.transferFrom(msg.sender, address(this), cash_);
+        _take(stock, shares_);
+        if (cash_ > 0) _take(cashToken, cash_);
         id = vaults.length;
         vaults.push(
             Vault(msg.sender, floor_, expiry_, vol_, band_ == 0 ? uint64(0.02e18) : band_, shares_, cash_, 0, false)
@@ -116,16 +135,15 @@ contract Undesk {
     /// The share of the vault that belongs in stock right now.
     function target(uint256 id) public view returns (int256) {
         Vault storage v = vaults[id];
-        (, int256 p,,,) = feed.latestRoundData();
+        int256 p = int256(_fresh());
         int256 t = v.expiry <= block.timestamp ? int256(0) : int256((uint256(v.expiry) - block.timestamp) * 1e18 / YEAR);
-        return BS.insuredWeight(int256(uint256(p)) * 1e10, int256(uint256(v.floor)) * 1e10, int256(uint256(v.vol)), t);
+        return BS.insuredWeight(p * 1e10, int256(uint256(v.floor)) * 1e10, int256(uint256(v.vol)), t);
     }
 
     /// The share of the vault that is in stock right now.
     function weight(uint256 id) public view returns (int256) {
         Vault storage v = vaults[id];
-        (, int256 p,,,) = feed.latestRoundData();
-        uint256 inStock = (v.shares * uint256(p)) / PX; // 1e18 of value
+        uint256 inStock = (v.shares * _fresh()) / PX; // 1e18 of value
         uint256 total = inStock + v.cash * 1e12;
         if (total == 0) return 0;
         return int256((inStock * uint256(ONE)) / total);
@@ -153,10 +171,9 @@ contract Undesk {
         uint256 fee = bounty > v.cash ? v.cash : bounty;
         if (fee > 0) {
             v.cash -= fee;
-            cashToken.transfer(msg.sender, fee);
+            _pay(cashToken, msg.sender, fee);
         }
-        (, int256 p,,,) = feed.latestRoundData();
-        emit Rebalanced(id, p, want, v.shares, v.cash, msg.sender);
+        emit Rebalanced(id, int256(_fresh()), want, v.shares, v.cash, msg.sender);
     }
 
     /// After the day named, everything goes back to the owner. What comes back
@@ -170,8 +187,8 @@ contract Undesk {
         uint256 c = v.cash;
         v.shares = 0;
         v.cash = 0;
-        if (s > 0) stock.transfer(v.owner, s);
-        if (c > 0) cashToken.transfer(v.owner, c);
+        if (s > 0) _pay(stock, v.owner, s);
+        if (c > 0) _pay(cashToken, v.owner, c);
         (, int256 p,,,) = feed.latestRoundData();
         emit Closed(id, s, c, p);
     }
@@ -180,8 +197,7 @@ contract Undesk {
     /// is more than MAX_SLIP_BPS away from it.
     function _move(uint256 id) internal {
         Vault storage v = vaults[id];
-        (, int256 p,,,) = feed.latestRoundData();
-        uint256 px = uint256(p);
+        uint256 px = _fresh();
 
         uint256 inStock = (v.shares * px) / PX;
         uint256 total = inStock + v.cash * 1e12;
@@ -195,9 +211,9 @@ contract Undesk {
             if (spend > v.cash) spend = v.cash;
             if (spend == 0) return;
             uint256 minOut = ((spend * 1e12 * PX) / px) * (10_000 - MAX_SLIP_BPS) / 10_000;
+            v.cash -= spend;
             cashToken.approve(address(venue), spend);
             uint256 got = venue.swap(address(cashToken), address(stock), spend, minOut);
-            v.cash -= spend;
             v.shares += got;
         } else {
             uint256 sell = inStock - want; // value of stock to sell, 1e18
@@ -205,9 +221,9 @@ contract Undesk {
             if (qty > v.shares) qty = v.shares;
             if (qty == 0) return;
             uint256 minOut = ((qty * px) / PX / 1e12) * (10_000 - MAX_SLIP_BPS) / 10_000;
+            v.shares -= qty;
             stock.approve(address(venue), qty);
             uint256 got = venue.swap(address(stock), address(cashToken), qty, minOut);
-            v.shares -= qty;
             v.cash += got;
         }
     }
