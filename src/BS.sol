@@ -45,7 +45,11 @@ library BS {
     /// is why this machine never borrows and never shorts.
     function insuredWeight(int256 spot, int256 strike, int256 vol, int256 tYears) internal pure returns (int256) {
         if (tYears <= 0) return spot > strike ? ONE : int256(0);
-        (int256 d1,) = ds(spot, strike, vol, tYears);
-        return Fixed.ncdf(d1);
+        (int256 d1, int256 d2) = ds(spot, strike, vol, tYears);
+        int256 inStock = (spot * Fixed.ncdf(d1)) / ONE; // S * N(d1)
+        int256 inCash = (strike * Fixed.ncdf(-d2)) / ONE; // K * N(-d2)
+        int256 total = inStock + inCash;
+        if (total == 0) return 0;
+        return (inStock * ONE) / total;
     }
 }
