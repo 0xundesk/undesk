@@ -1,109 +1,105 @@
 <p align="center">
-  <img src="assets/banner.png" alt="UNDESK" width="100%">
+  <img src="assets/banner.png" alt="RATCHET" width="100%">
 </p>
 
-# UNDESK
+# RATCHET
 
-An option nobody wrote.
-
-A bank manufactures this on a desk, with people at it. This is that desk with
-nobody at it.
+Your high becomes your floor.
 
 [x.com/0xundesk](https://x.com/0xundesk)
 
+A bank sells this as a lookback put with a rolling strike, on a desk full of
+people. This is that desk with nobody at it.
+
+Put in stock, and the cash the starting floor costs. From that moment the
+vault has one job: at every price the chain publishes, move a little between
+stock and cash so that it holds what "the stock, but never below the floor"
+pays, and when the stock climbs, drag the floor up behind it and lock it. A
+ratchet turns one way. The floor only ever rises.
+
 ## Live on Hood Chain
 
-    Undesk   0xDC3d4f67F9AD517336f2db084dc05f30d2b63112
+    Ratchet  0xDC3d4f67F9AD517336f2db084dc05f30d2b63112
     Venue    0x5378Fa5716dd2150011928D4224311417673fDAb
     Chain    Hood Chain (id 4663)
-
-First quote minutes after deploy: ten NVDA shares, floor at the money, thirty
-days out, at 42 percent vol: 110.53 USDG. That number came out of the chain,
-not off a screen.
-
-Put in stock and the cash the floor costs. From there the vault moves a little
-between stock and cash at every price the chain publishes, so that at the end
-it holds what "the stock, but never below the floor" pays.
-
-There is no writer on the other side, no counterparty to trust and no promise
-to enforce. The payoff is manufactured out of your own two assets, one print at
-a time, and anyone can watch every move.
 
 ## The proof
 
 Black and Scholes showed that an option can be built out of stock and cash
-alone. The formula is the consequence, not the discovery. This is the building.
+alone. The formula is the consequence. This machine builds the option, and
+the ratchet adds one line: whenever the price has climbed enough that a fresh
+at-the-money put fits inside the vault with room, the floor is re-struck at
+the new price and the guarantee is locked to the new number.
 
-Two numbers say whether it works, and both come from outside this repository.
+Two numbers say whether the underlying replication works, both from outside
+this repository. The textbook value of a standard call is 7.965567455405804.
+This engine, in integers only, answers 7.965579. The prints published on
+this chain, 992 of them across 74 days, are packed into the test suite.
+Twelve month-long windows replay from the tape with a fixed floor. The
+manufactured payoff lands within 2.52 percent of what the option owed, the
+median across every window, at the thirteen chances a day this chain gives.
 
-    textbook value of the standard call      7.965567455405804
-    this engine, in integers only            7.965579
+## The ratchet on the same tape
 
-    replayed on 992 real prints from Hood Chain, 12 windows of 30 days
-    the manufactured payoff lands within     2.52% of what the option owed
+Twelve month-long windows again, with clicks turned on and a two percent
+minimum bump per click. Each window's floor starts at spot, and every click
+demands that a fresh at-the-money put fits inside the vault with headroom
+before it fires. The measured result:
 
-The prints are the ones Hood Chain published for NVIDIA, read off the feed at
-`0x379EC4f7C378F34a1B47E4F3cbeBCbAC3E8E9F15` and packed into `test/History.sol`.
-Nothing is simulated and nothing is sampled: the machine is replayed on the
-market that actually happened.
+    median clicks per 30 days                  1
+    median floor rise over the month           7.6%
+    median finish above the locked floor       3.9%
 
-## What it costs to run
+Eleven of twelve windows finished comfortably above their locked floor. One
+did not, by 10 percent, in the same fast-tape window where the underlying
+replication itself missed by that much. The floor is a monotone promise by
+construction. Defending it is a physics question, and the physics does not
+change: the same 2.52 percent hedge error a fixed floor carries, the moving
+floor carries too, plus a tail.
 
-The vault moves when the weight has drifted past a band, and whoever pushes the
-button is paid out of the vault. Wider bands mean fewer pushes.
+## The desk staffs itself
 
-    band    pushes per 30 days    error       error with the pusher paid
-    2%             218            2.52%              26.51%
-    5%              46            3.59%              11.37%
-    10%             14           11.58%              10.04%
-
-Measured on a hundred shares, paying one dollar a push, which is what a
-transaction costs on this chain. The push is a flat fee, so the larger the
-position the smaller its share of the premium.
+Every move is a transaction. Anyone may push the button once the position
+has drifted past its band, or once the ratchet has a click waiting. The
+vault pays the pusher out of its own cash. The machine hires its own staff,
+one transaction at a time.
 
 ## What is inside
 
-Everything is built from integers, because the machine it runs on has no
-decimal point.
+The EVM has no decimal point, so it has no logarithm, no exponential, no
+square root, no bell curve. RATCHET carries its own, in 1e18 fixed point:
+the log by an atanh series, e^x by argument reduction and a Taylor series,
+the normal curve by Abramowitz and Stegun, good to seven decimal places.
 
-- `Fixed.sol` - the logarithm by argument reduction and an atanh series, the
-  exponential by argument reduction and a Taylor series, the square root by
-  Babylonian iteration, and the bell curve by the Abramowitz and Stegun
-  rational approximation, all in 1e18 fixed point
-- `BS.sol` - what an option is worth, and the share of the vault that must
-  sit in stock to track it
-- `Undesk.sol` - the vault: put stock in, name the floor and the day, and
-  anyone may push the button when the weight has drifted
+- `Fixed.sol` and `BS.sol` - the arithmetic and the Black-Scholes core
+- `Ratchet.sol` - the vault: stock in, floor named, clicks and drifts
+  handled by anyone, closed after expiry
+- `Venue.sol` - the bridge to the Uniswap V3 style pool where the two legs
+  actually trade, with a callback that only pays out while the vault's own
+  swap is in flight
 
-The weight the vault targets is always between zero and one, which is why this
-machine never borrows and never sells short.
+The weight the vault targets is always between zero and one, so it never
+borrows and never shorts.
 
 ## Interface
 
-    quote(shares, floor, expiry, vol)              -> cash the floor costs
-    open(shares, cash, floor, expiry, vol, band)   -> id
-    target(id)                                     -> the weight that belongs in stock
-    weight(id)                                     -> the weight that is in stock
-    value(id)                                      -> what the vault is worth
-    rebalance(id)                                  -> anyone, once the drift passes the band
-    close(id)                                      -> after expiry, everything to the owner
+    quote(shares, floor, expiry, vol)                        -> cost of the initial floor
+    open(shares, cash, floor, expiry, vol, band, lift)       -> id
+    click(id)                                                -> new floor waiting to lock, or two zeros
+    target(id)                                               -> the weight that belongs in stock
+    weight(id)                                               -> the weight that is in stock
+    value(id)                                                -> what the vault is worth
+    rebalance(id)                                            -> anyone, once click or drift has room
+    close(id)                                                -> after expiry, everything to the owner
 
-Rate is zero throughout. The cash leg is a stablecoin that pays nothing, and
-pretending otherwise would put a number in the formula that nobody receives.
+Setting `lift` to the maximum keeps the floor fixed. That is the plain
+UNDESK behaviour: same code, no ratchet.
 
 ## Build and test
 
     forge test
 
-Every test runs offline. The replay carries its own prices.
-
-## Layout
-
-    src/Fixed.sol        the arithmetic the EVM does not have
-    src/BS.sol           price, delta, and the insured weight
-    src/Undesk.sol       the vault
-    test/Math.t.sol      every constant checked against a published value
-    test/Replay.t.sol    the machine replayed on real prints
-    test/History.sol     992 prints, packed
+Every expected value is a closed form, a hand inversion, or the market that
+actually happened. Nothing is mocked.
 
 MIT licensed.

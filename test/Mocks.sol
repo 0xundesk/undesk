@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import {IERC20, IFeed, ISwap} from "../src/Undesk.sol";
+import {IERC20, IFeed, ISwap} from "../src/Ratchet.sol";
 
 contract Token is IERC20 {
     mapping(address => uint256) public balanceOf;

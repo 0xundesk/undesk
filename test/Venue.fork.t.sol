@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {Undesk, IERC20, IFeed, ISwap} from "../src/Undesk.sol";
+import {Ratchet, IERC20, IFeed, ISwap} from "../src/Ratchet.sol";
 import {Venue, IV3Pool} from "../src/Venue.sol";
 
 /// The venue and the vault against the real pool, the real tokens and the
@@ -78,7 +78,7 @@ contract VenueForkTest is Test {
     /// position on real NVDA, watch it take its opening hedge on the real
     /// pool, then close after expiry and get both legs back.
     function test_VaultOnTheRealPool() public {
-        Undesk u = new Undesk(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), 1e6);
+        Ratchet u = new Ratchet(IERC20(NVDA), IERC20(USDG), IFeed(FEED), ISwap(address(venue)), 1e6);
 
         uint96 floor = uint96(feedPx());
         uint40 expiry = uint40(block.timestamp + 30 days);
@@ -89,7 +89,7 @@ contract VenueForkTest is Test {
         vm.startPrank(user);
         IERC20(NVDA).approve(address(u), shares);
         IERC20(USDG).approve(address(u), prem);
-        uint256 id = u.open(shares, prem, floor, expiry, 0.42e18, 0.02e18);
+        uint256 id = u.open(shares, prem, floor, expiry, 0.42e18, 0.02e18, type(uint64).max);
         vm.stopPrank();
 
         int256 want = u.target(id);
