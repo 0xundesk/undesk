@@ -7,6 +7,16 @@ nobody at it.
 
 [x.com/0xundesk](https://x.com/0xundesk)
 
+## Live on Hood Chain
+
+    Undesk   0xDC3d4f67F9AD517336f2db084dc05f30d2b63112
+    Venue    0x5378Fa5716dd2150011928D4224311417673fDAb
+    Chain    Hood Chain (id 4663)
+
+First quote minutes after deploy: ten NVDA shares, floor at the money, thirty
+days out, at 42 percent vol: 110.53 USDG. That number came out of the chain,
+not off a screen.
+
 Put in stock and the cash the floor costs. From there the vault moves a little
 between stock and cash at every price the chain publishes, so that at the end
 it holds what "the stock, but never below the floor" pays.
